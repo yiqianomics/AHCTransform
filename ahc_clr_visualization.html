@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AHC vs CLR: Compositional Data Transformation</title>
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f0f2f7;
+  --surface: #ffffff;
+  --surface2: #f8f9fc;
+  --border: #e2e8f0;
+  --text: #1a202c;
+  --text-muted: #64748b;
+  --text-xs: #94a3b8;
+  --accent-ahc: #ea7320;
+  --accent-ahc-bg: #fff7ed;
+  --accent-ahc-border: #fed7aa;
+  --accent-clr: #7c3aed;
+  --accent-clr-bg: #f5f3ff;
+  --accent-clr-border: #ddd6fe;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --danger-text: #b91c1c;
+  --success: #16a34a;
+  --success-bg: #f0fdf4;
+  --warn: #d97706;
+  --warn-bg: #fffbeb;
+  --warn-border: #fde68a;
+  --radius-sm: 6px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.08), 0 2px 4px -1px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.site-header {
+  background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4c1d95 100%);
+  color: white;
+  padding: 48px 32px 40px;
+  text-align: center;
+}
+.site-header h1 {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.site-header p {
+  font-size: 1rem;
+  opacity: 0.8;
+  max-width: 680px;
+  margin: 0 auto 20px;
+}
+.method-badges {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 99px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+.badge-ahc {
+  background: rgba(234,115,32,0.2);
+  border: 1px solid rgba(234,115,32,0.5);
+  color: #fdba74;
+}
+.badge-clr {
+  background: rgba(167,139,250,0.2);
+  border: 1px solid rgba(167,139,250,0.5);
+  color: #c4b5fd;
+}
+.badge-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── MAIN LAYOUT ── */
+.main-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.card-header {
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-header h2 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.card-header p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-left: auto;
+}
+.card-body { padding: 20px 24px; }
+
+/* ── POINTS TABLE ── */
+.controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .controls-grid { grid-template-columns: 1fr; }
+}
+
+.points-table-wrap { overflow-x: auto; }
+.points-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.points-table th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+.points-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.points-table tr:last-child td { border-bottom: none; }
+
+.color-swatch {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 2px solid white;
+  box-shadow: 0 0 0 1.5px rgba(0,0,0,0.15);
+  vertical-align: middle;
+}
+.pt-label {
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.comp-input {
+  width: 70px;
+  padding: 5px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-family: 'SF Mono', 'Monaco', monospace;
+  color: var(--text);
+  transition: border-color 0.15s;
+  background: var(--surface2);
+}
+.comp-input:focus {
+  outline: none;
+  border-color: #6366f1;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+.comp-input.err { border-color: var(--danger); background: var(--danger-bg); }
+
+.sum-display {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 0.78rem;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.sum-ok { background: var(--success-bg); color: var(--success); }
+.sum-warn { background: var(--danger-bg); color: var(--danger-text); }
+
+.zero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 99px;
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  color: var(--warn);
+  white-space: nowrap;
+}
+.zero-badge.hidden { visibility: hidden; }
+
+.remove-btn {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--text-xs);
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.remove-btn:hover { background: var(--danger-bg); color: var(--danger); }
+
+.add-point-btn {
+  margin-top: 12px;
+  padding: 8px 18px;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.add-point-btn:hover:not(:disabled) {
+  border-color: #6366f1;
+  color: #6366f1;
+  background: rgba(99,102,241,0.05);
+}
+.add-point-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── CLR CONTROLS ── */
+.clr-control-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eps-section {
+  background: var(--accent-clr-bg);
+  border: 1px solid var(--accent-clr-border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.eps-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-clr);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.eps-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.eps-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.eps-label {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent-clr);
+  white-space: nowrap;
+}
+.eps-number-input {
+  width: 90px;
+  padding: 6px 10px;
+  border: 1.5px solid var(--accent-clr-border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-family: 'SF Mono', 'Monaco', monospace;
+  color: var(--accent-clr);
+  background: white;
+  font-weight: 600;
+}
+.eps-number-input:focus {
+  outline: none;
+  border-color: var(--accent-clr);
+  box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+}
+.eps-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  height: 5px;
+  border-radius: 99px;
+  background: var(--accent-clr-border);
+  outline: none;
+  cursor: pointer;
+}
+.eps-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--accent-clr);
+  box-shadow: 0 0 0 3px white, 0 0 0 5px var(--accent-clr-border);
+  cursor: pointer;
+}
+.eps-range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--text-xs);
+  margin-top: 4px;
+  font-family: monospace;
+}
+
+.zero-alert {
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.zero-alert.has-zeros {
+  background: var(--warn-bg);
+  border: 1px solid var(--warn-border);
+  color: #92400e;
+}
+.zero-alert.no-zeros {
+  background: var(--success-bg);
+  border: 1px solid #bbf7d0;
+  color: #14532d;
+}
+.zero-alert strong { font-weight: 700; }
+
+.eps-affected-list {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.eps-affected-item {
+  font-family: 'SF Mono', 'Monaco', monospace;
+  font-size: 0.72rem;
+  color: #92400e;
+  background: rgba(251,191,36,0.15);
+  border-radius: 4px;
+  padding: 2px 7px;
+}
+
+/* ── PLOTS GRID ── */
+.plots-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 1100px) {
+  .plots-grid { grid-template-columns: 1fr; }
+}
+
+.plot-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.plot-card-header {
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.plot-card-header-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.method-tag {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+.method-tag.ahc { background: var(--accent-ahc-bg); color: var(--accent-ahc); border: 1px solid var(--accent-ahc-border); }
+.method-tag.clr { background: var(--accent-clr-bg); color: var(--accent-clr); border: 1px solid var(--accent-clr-border); }
+
+.plot-card-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+.plot-card-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
+
+.plot-legend {
+  display: flex;
+  gap: 14px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  flex-wrap: wrap;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.legend-shape {
+  width: 10px; height: 10px;
+  border: 2px solid #888;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.legend-shape.circle { border-radius: 50%; }
+.legend-shape.diamond { transform: rotate(45deg); }
+.legend-shape.square { border-radius: 1px; }
+
+.plot-div { width: 100%; }
+
+/* ── INSIGHT ── */
+.insight-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 900px) { .insight-grid { grid-template-columns: 1fr; } }
+
+.insight-card {
+  border-radius: var(--radius);
+  padding: 22px 24px;
+  border: 1px solid;
+}
+.insight-card.ahc-card {
+  background: var(--accent-ahc-bg);
+  border-color: var(--accent-ahc-border);
+}
+.insight-card.clr-card {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+.insight-icon { font-size: 1.5rem; margin-bottom: 8px; }
+.insight-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.insight-card.ahc-card .insight-title { color: var(--accent-ahc); }
+.insight-card.clr-card .insight-title { color: var(--danger-text); }
+.insight-body { font-size: 0.83rem; color: var(--text-muted); line-height: 1.6; }
+.insight-body ul { padding-left: 16px; margin-top: 6px; }
+.insight-body li { margin-bottom: 4px; }
+
+/* ── FOOTER ── */
+.site-footer {
+  text-align: center;
+  padding: 24px;
+  font-size: 0.78rem;
+  color: var(--text-xs);
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+/* ── UTILS ── */
+.section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════ HEADER -->
+<header class="site-header">
+  <h1>AHC vs CLR: Compositional Data Transformation</h1>
+  <p>An interactive visualization showing why the <strong>Arcsine-Hellinger Centered</strong> (AHC) transformation is robust to zeros, while the standard <strong>Centered Log-Ratio</strong> (CLR) transformation is not.</p>
+  <div class="method-badges">
+    <span class="badge badge-ahc"><span class="badge-dot"></span>AHC — handles zeros naturally</span>
+    <span class="badge badge-clr"><span class="badge-dot"></span>CLR — breaks at zero; requires pseudo-count</span>
+  </div>
+</header>
+
+<!-- ════════════════════════════════════════════ MAIN -->
+<main class="main-content">
+
+  <!-- ── CONTROLS CARD ── -->
+  <div class="card">
+    <div class="card-header">
+      <span style="font-size:1.1rem">📍</span>
+      <h2>Composition Points</h2>
+      <p>Define up to 5 points · values are auto-normalized to sum = 1</p>
+    </div>
+    <div class="card-body">
+      <div class="controls-grid">
+
+        <!-- Points table -->
+        <div>
+          <div class="points-table-wrap">
+            <table class="points-table" id="points-table">
+              <thead>
+                <tr>
+                  <th style="width:90px">Point</th>
+                  <th>c₁</th>
+                  <th>c₂</th>
+                  <th>c₃</th>
+                  <th style="width:70px">Sum</th>
+                  <th style="width:90px">Zeros?</th>
+                  <th style="width:30px"></th>
+                </tr>
+              </thead>
+              <tbody id="points-tbody"></tbody>
+            </table>
+          </div>
+          <button class="add-point-btn" id="add-point-btn" onclick="addPoint()">
+            <span style="font-size:1.1rem;line-height:1">+</span> Add Point
+          </button>
+        </div>
+
+        <!-- CLR controls -->
+        <div class="clr-control-panel">
+          <div class="eps-section">
+            <div class="eps-title">CLR Pseudo-count &nbsp;ε</div>
+            <div class="eps-subtitle">CLR is undefined at zero. Points with zero components are replaced with ε and re-normalized before log-transformation.</div>
+            <div class="eps-input-row">
+              <span class="eps-label">ε =</span>
+              <input type="number" class="eps-number-input" id="eps-number"
+                min="0.0001" max="0.2" step="0.001" value="0.01"
+                oninput="onEpsNumberChange(this.value)">
+            </div>
+            <input type="range" class="eps-slider" id="eps-slider"
+              min="-3.699" max="-0.699" step="0.001" value="-2"
+              oninput="onEpsSliderChange(this.value)">
+            <div class="eps-range-labels">
+              <span>0.0002</span><span>0.001</span><span>0.01</span><span>0.1</span><span>0.2</span>
+            </div>
+          </div>
+          <div class="zero-alert" id="zero-alert"></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PLOTS GRID ── -->
+  <div class="plots-grid">
+
+    <!-- AHC Plot -->
+    <div class="plot-card">
+      <div class="plot-card-header">
+        <div class="plot-card-header-inner">
+          <span class="method-tag ahc">AHC</span>
+          <div>
+            <div class="plot-card-title">AHC Transformation</div>
+            <div class="plot-card-sub">π → √π (sphere) → AHC(π) (zero-sum plane) &nbsp;·&nbsp; No special handling of zeros required</div>
+          </div>
+        </div>
+      </div>
+      <div class="plot-legend">
+        <div class="legend-item"><div class="legend-shape circle" style="border-color:#555"></div> composition π</div>
+        <div class="legend-item"><div class="legend-shape diamond" style="border-color:#555"></div> √π on sphere</div>
+        <div class="legend-item"><div class="legend-shape square" style="border-color:#555"></div> AHC(π)</div>
+      </div>
+      <div class="plot-div" id="ahc-plot"></div>
+    </div>
+
+    <!-- CLR Plot -->
+    <div class="plot-card">
+      <div class="plot-card-header">
+        <div class="plot-card-header-inner">
+          <span class="method-tag clr">CLR</span>
+          <div>
+            <div class="plot-card-title">CLR Transformation</div>
+            <div class="plot-card-sub" id="clr-subtitle">π → π+ε (simplex) → CLR(π) (zero-sum plane) &nbsp;·&nbsp; Adjust ε above to see instability</div>
+          </div>
+        </div>
+      </div>
+      <div class="plot-legend">
+        <div class="legend-item"><div class="legend-shape circle" style="border-color:#555"></div> composition π</div>
+        <div class="legend-item"><div class="legend-shape diamond" style="border-color:#555"></div> π after ε-replacement</div>
+        <div class="legend-item"><div class="legend-shape square" style="border-color:#555"></div> CLR(π)</div>
+      </div>
+      <div class="plot-div" id="clr-plot"></div>
+    </div>
+
+  </div>
+
+  <!-- ── INSIGHT ── -->
+  <div class="insight-grid">
+    <div class="insight-card ahc-card">
+      <div class="insight-icon">✅</div>
+      <div class="insight-title">Why AHC handles zeros gracefully</div>
+      <div class="insight-body">
+        AHC maps each composition π to its square root q = √π on the positive orthant of the unit sphere. This is well-defined even when some components are zero — the zero simply maps to zero on the sphere. The subsequent centering onto the zero-sum plane is a smooth projection that introduces no singularity.
+        <ul>
+          <li>No pseudo-count needed — results are exact</li>
+          <li>Boundary points (with zeros) map to the boundary of the sphere</li>
+          <li>Transformation is stable and reproducible</li>
+        </ul>
+      </div>
+    </div>
+    <div class="insight-card clr-card">
+      <div class="insight-icon">⚠️</div>
+      <div class="insight-title">Why zeros break CLR</div>
+      <div class="insight-body">
+        CLR requires taking log(πᵢ), which diverges to −∞ as πᵢ → 0. A pseudo-count ε is added before log-transformation, but this is <strong>arbitrary</strong>: the result changes dramatically depending on the chosen ε. Try dragging the ε slider above and watch the zero-containing points jump around in the CLR plot.
+        <ul>
+          <li>The choice of ε is subjective and affects results</li>
+          <li>Small ε pushes points to extreme coordinates</li>
+          <li>Downstream analyses (PCA, regression) are ε-dependent</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-footer">
+  Interactive visualization · AHC vs CLR compositional data transformation
+</footer>
+
+<!-- ════════════════════════════════════════════ JAVASCRIPT -->
+<script>
+'use strict';
+
+// ────────────────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────────────────
+const COLORS = ['#cb2426','#f6be2a','#4c54a0','#2573b4','#148843'];
+
+let state = {
+  points: [
+    [0.00, 0.12, 0.88],
+    [0.12, 0.78, 0.10],
+    [0.72, 0.18, 0.10],
+    [0.28, 0.30, 0.42],
+    [0.55, 0.00, 0.45]
+  ],
+  eps: 0.01
+};
+
+// ────────────────────────────────────────────────────────────
+// MATH
+// ────────────────────────────────────────────────────────────
+function normalize(row) {
+  const s = row.reduce((a, b) => a + b, 0);
+  if (s <= 0) return row.map(() => 1/row.length);
+  return row.map(x => x / s);
+}
+
+function ahcTransform(Pi) {
+  const p = 3;
+  const q0 = [1/Math.sqrt(p), 1/Math.sqrt(p), 1/Math.sqrt(p)];
+  const Q = Pi.map(row => row.map(x => Math.sqrt(Math.max(0, x))));
+  const results = Q.map(q => {
+    let c = q.reduce((s, x, j) => s + x * q0[j], 0);
+    c = Math.max(-1, Math.min(1, c));
+    const s2 = Math.max(0, 1 - c * c);
+    const sv = Math.sqrt(s2);
+    const a = sv < 1e-10 ? 1.0 : Math.asin(sv) / sv;
+    const cq = q.map((x, j) => x - c * q0[j]);
+    const Z = cq.map(x => x * a);
+    return { q, Z };
+  });
+  return {
+    Q: results.map(r => r.q),
+    Z: results.map(r => r.Z)
+  };
+}
+
+function clrTransform(Pi, eps) {
+  const Pi_pos = Pi.map(row => {
+    const r = row.map(x => (x <= 0) ? eps : x);
+    const s = r.reduce((a, b) => a + b, 0);
+    return r.map(x => x / s);
+  });
+  const CLR = Pi_pos.map(row => {
+    const lr = row.map(x => Math.log(x));
+    const mean = lr.reduce((a, b) => a + b, 0) / lr.length;
+    return lr.map(x => x - mean);
+  });
+  return { Pi_pos, CLR };
+}
+
+// ────────────────────────────────────────────────────────────
+// GEOMETRY BUILDERS
+// ────────────────────────────────────────────────────────────
+const SV = [[1,0,0],[0,1,0],[0,0,1]]; // simplex vertices
+const B1 = [1/Math.sqrt(2), -1/Math.sqrt(2), 0];
+const B2 = [1/Math.sqrt(6),  1/Math.sqrt(6), -2/Math.sqrt(6)];
+
+function buildSimplex() {
+  const edges = [...SV, SV[0]];
+  return [
+    {
+      type:'mesh3d',
+      x:SV.map(v=>v[0]), y:SV.map(v=>v[1]), z:SV.map(v=>v[2]),
+      i:[0], j:[1], k:[2],
+      color:'#7dd3c7', opacity:0.22,
+      hoverinfo:'skip', showlegend:false, name:'simplex'
+    },
+    {
+      type:'scatter3d',
+      x:edges.map(v=>v[0]), y:edges.map(v=>v[1]), z:edges.map(v=>v[2]),
+      mode:'lines', line:{color:'#9cbea4', width:7},
+      hoverinfo:'skip', showlegend:false
+    }
+  ];
+}
+
+function buildSphere() {
+  const nu = 60, nv = 30;
+  const u = Array.from({length:nu},(_,i)=>2*Math.PI*i/(nu-1));
+  const v = Array.from({length:nv},(_,i)=>Math.PI*i/(nv-1));
+  const xs = u.map(ui => v.map(vi => Math.cos(ui)*Math.sin(vi)));
+  const ys = u.map(ui => v.map(vi => Math.sin(ui)*Math.sin(vi)));
+  const zs = u.map(()  => v.map(vi => Math.cos(vi)));
+  return {
+    type:'surface',
+    x:xs, y:ys, z:zs,
+    opacity:0.07, showscale:false,
+    colorscale:[[0,'#9bc2ee'],[1,'#9bc2ee']],
+    hoverinfo:'skip', showlegend:false, name:'sphere'
+  };
+}
+
+function buildOctantArcs() {
+  const N = 120;
+  const tt = Array.from({length:N},(_,i)=>Math.PI/2*i/(N-1));
+  const mk = (xf,yf,zf) => ({
+    type:'scatter3d',
+    x:tt.map(xf), y:tt.map(yf), z:tt.map(zf),
+    mode:'lines', line:{color:'#2563eb', width:4},
+    hoverinfo:'skip', showlegend:false
+  });
+  return [
+    mk(t=>Math.cos(t), t=>Math.sin(t), ()=>0),
+    mk(t=>Math.cos(t), ()=>0,          t=>Math.sin(t)),
+    mk(()=>0,          t=>Math.cos(t), t=>Math.sin(t))
+  ];
+}
+
+function buildPlane(r, meshColor, edgeColor) {
+  const c2d = [[-r,-r],[r,-r],[r,r],[-r,r]];
+  const pts = c2d.map(([a,b]) => [
+    a*B1[0]+b*B2[0], a*B1[1]+b*B2[1], a*B1[2]+b*B2[2]
+  ]);
+  const pe = [...pts, pts[0]];
+  return [
+    {
+      type:'mesh3d',
+      x:pts.map(p=>p[0]), y:pts.map(p=>p[1]), z:pts.map(p=>p[2]),
+      i:[0,0], j:[1,2], k:[2,3],
+      color:meshColor, opacity:0.28,
+      hoverinfo:'skip', showlegend:false
+    },
+    {
+      type:'scatter3d',
+      x:pe.map(p=>p[0]), y:pe.map(p=>p[1]), z:pe.map(p=>p[2]),
+      mode:'lines', line:{color:edgeColor, width:5},
+      hoverinfo:'skip', showlegend:false
+    }
+  ];
+}
+
+function buildAxes(lim, color) {
+  const mk = (xArr, yArr, zArr) => ({
+    type:'scatter3d',
+    x:xArr, y:yArr, z:zArr,
+    mode:'lines', line:{color, width:5},
+    hoverinfo:'skip', showlegend:false
+  });
+  return [
+    mk([0,lim],[0,0],[0,0]),
+    mk([0,0],[0,lim],[0,0]),
+    mk([0,0],[0,0],[0,lim])
+  ];
+}
+
+// ────────────────────────────────────────────────────────────
+// POINT TRACES
+// ────────────────────────────────────────────────────────────
+function norm3(v) { return Math.sqrt(v.reduce((s,x)=>s+x*x,0)); }
+
+function pointsTrace(X, label, symbol, size, opacity, activeColors) {
+  const n = X.length;
+  return {
+    type:'scatter3d',
+    x:X.map(r=>r[0]), y:X.map(r=>r[1]), z:X.map(r=>r[2]),
+    mode:'markers',
+    marker:{
+      size, color:activeColors, symbol, opacity,
+      line:{color:'white', width:3}
+    },
+    hovertext: X.map((r,i) =>
+      `${label}<br>Point ${i+1}<br>(${r[0].toFixed(4)}, ${r[1].toFixed(4)}, ${r[2].toFixed(4)})`
+    ),
+    hoverinfo:'text',
+    name:label, showlegend:true
+  };
+}
+
+function arrowTraces(from, to, colors) {
+  const traces = [];
+  for (let i = 0; i < from.length; i++) {
+    const col = colors[i];
+    const f = from[i], t = to[i];
+    traces.push({
+      type:'scatter3d',
+      x:[f[0],t[0]], y:[f[1],t[1]], z:[f[2],t[2]],
+      mode:'lines', line:{color:col, width:4},
+      opacity:0.55, hoverinfo:'skip', showlegend:false
+    });
+    const d = [t[0]-f[0], t[1]-f[1], t[2]-f[2]];
+    const dn = norm3(d);
+    if (dn > 1e-10) {
+      const u = d.map(x=>x/dn);
+      const sz = 0.12;
+      traces.push({
+        type:'cone',
+        x:[t[0]], y:[t[1]], z:[t[2]],
+        u:[sz*u[0]], v:[sz*u[1]], w:[sz*u[2]],
+        sizemode:'absolute', sizeref:sz, anchor:'tip',
+        colorscale:[[0,col],[1,col]], showscale:false,
+        opacity:0.75, hoverinfo:'skip', showlegend:false
+      });
+    }
+  }
+  return traces;
+}
+
+function arrowTracesDash(from, to, colors) {
+  const traces = [];
+  for (let i = 0; i < from.length; i++) {
+    const col = colors[i];
+    const f = from[i], t = to[i];
+    traces.push({
+      type:'scatter3d',
+      x:[f[0],t[0]], y:[f[1],t[1]], z:[f[2],t[2]],
+      mode:'lines', line:{color:col, width:4, dash:'dash'},
+      opacity:0.55, hoverinfo:'skip', showlegend:false
+    });
+    const d = [t[0]-f[0], t[1]-f[1], t[2]-f[2]];
+    const dn = norm3(d);
+    if (dn > 1e-10) {
+      const u = d.map(x=>x/dn);
+      const sz = 0.12;
+      traces.push({
+        type:'cone',
+        x:[t[0]], y:[t[1]], z:[t[2]],
+        u:[sz*u[0]], v:[sz*u[1]], w:[sz*u[2]],
+        sizemode:'absolute', sizeref:sz, anchor:'tip',
+        colorscale:[[0,col],[1,col]], showscale:false,
+        opacity:0.75, hoverinfo:'skip', showlegend:false
+      });
+    }
+  }
+  return traces;
+}
+
+// ────────────────────────────────────────────────────────────
+// PLOT LAYOUTS
+// ────────────────────────────────────────────────────────────
+function makeLayout(title, axisRange) {
+  const ax = {
+    title:'', range:axisRange,
+    showticklabels:false, showgrid:true,
+    gridcolor:'rgba(180,180,180,0.4)', zeroline:false,
+    showbackground:true, backgroundcolor:'rgba(248,248,250,1)'
+  };
+  return {
+    autosize:true,
+    height:520,
+    paper_bgcolor:'white',
+    margin:{l:0,r:0,t:48,b:0},
+    title:{text:title, x:0.5, font:{size:15, color:'#374151'}},
+    legend:{x:0.02, y:0.98, bgcolor:'rgba(255,255,255,0.82)',
+      bordercolor:'rgba(0,0,0,0.1)', borderwidth:1, font:{size:11}},
+    scene:{
+      xaxis:{...ax}, yaxis:{...ax}, zaxis:{...ax},
+      aspectmode:'cube',
+      camera:{eye:{x:1.65,y:1.65,z:1.45}, center:{x:0,y:0,z:0}}
+    }
+  };
+}
+
+const plotConfig = {
+  displayModeBar:true,
+  modeBarButtonsToRemove:['toImage'],
+  responsive:true
+};
+
+// ────────────────────────────────────────────────────────────
+// RENDER AHC
+// ────────────────────────────────────────────────────────────
+function renderAHC() {
+  const Pi = state.points.map(normalize);
+  const n = Pi.length;
+  const activeColors = COLORS.slice(0, n);
+  const { Q, Z } = ahcTransform(Pi);
+
+  const maxZ = Math.max(...Z.map(z => norm3(z)));
+  const planeR = Math.max(maxZ, 0.5) * 2.5;
+
+  const traces = [
+    buildSphere(),
+    ...buildOctantArcs(),
+    ...buildSimplex(),
+    ...buildPlane(planeR, '#fdba74', '#ed9c7f'),
+    ...buildAxes(1.6, 'rgba(39,245,181,0.8)'),
+    ...arrowTraces(Pi, Q, activeColors),
+    ...arrowTracesDash(Q, Z, activeColors),
+    pointsTrace(Pi, 'composition π', 'circle',  7, 0.95, activeColors),
+    pointsTrace(Q,  '√π on sphere',  'diamond', 8, 0.95, activeColors),
+    pointsTrace(Z,  'AHC(π)',        'square',  8, 0.95, activeColors)
+  ].flat();
+
+  const axR = [-1.25, 1.25];
+  const layout = makeLayout('AHC transformation', axR);
+  Plotly.react('ahc-plot', traces, layout, plotConfig);
+}
+
+// ────────────────────────────────────────────────────────────
+// RENDER CLR
+// ────────────────────────────────────────────────────────────
+function renderCLR() {
+  const Pi = state.points.map(normalize);
+  const n = Pi.length;
+  const activeColors = COLORS.slice(0, n);
+  const eps = state.eps;
+  const { Pi_pos, CLR } = clrTransform(Pi, eps);
+
+  const maxCLR = Math.max(...CLR.map(z => norm3(z)));
+  const planeR = Math.max(maxCLR, 1) * 1.5;
+  const axMax = Math.max(1.6, Math.ceil(maxCLR * 1.2 * 10) / 10);
+  const axR = [-axMax, axMax];
+
+  const traces = [
+    ...buildSimplex(),
+    ...buildPlane(planeR, '#c4b5fd', '#7c3aed'),
+    ...buildAxes(axMax * 0.8, 'rgba(39,245,181,0.8)'),
+    ...arrowTraces(Pi, Pi_pos, activeColors),
+    ...arrowTracesDash(Pi_pos, CLR, activeColors),
+    pointsTrace(Pi,     'composition π',    'circle',  7, 0.95, activeColors),
+    pointsTrace(Pi_pos, `π after ε=${eps}`, 'diamond', 7, 0.75, activeColors),
+    pointsTrace(CLR,    'CLR(π)',           'square',  8, 0.95, activeColors)
+  ].flat();
+
+  const layout = makeLayout(`CLR transformation  (ε = ${eps})`, axR);
+  Plotly.react('clr-plot', traces, layout, plotConfig);
+
+  document.getElementById('clr-subtitle').textContent =
+    `π → π+ε replacement (ε = ${eps}) → CLR(π) · Adjust ε above to see instability`;
+}
+
+// ────────────────────────────────────────────────────────────
+// ZERO ALERT
+// ────────────────────────────────────────────────────────────
+function updateZeroAlert() {
+  const Pi = state.points.map(normalize);
+  const affected = [];
+  Pi.forEach((row, i) => {
+    const zeros = row.reduce((s, x) => s + (x <= 0 ? 1 : 0), 0);
+    if (zeros > 0) affected.push({ idx: i+1, row, zeros });
+  });
+  const el = document.getElementById('zero-alert');
+  if (affected.length === 0) {
+    el.className = 'zero-alert no-zeros';
+    el.innerHTML = `✅ <strong>No zero components</strong> — CLR will compute exactly for these points.`;
+  } else {
+    let html = `⚠️ <strong>${affected.length} point${affected.length>1?'s':''} contain zero</strong> — will be shifted by ε before CLR:`;
+    html += `<div class="eps-affected-list">`;
+    affected.forEach(({idx, row}) => {
+      const Pi_pos = row.map(x => x <= 0 ? state.eps : x);
+      const s = Pi_pos.reduce((a,b)=>a+b,0);
+      const norm = Pi_pos.map(x=>x/s);
+      html += `<div class="eps-affected-item">Point ${idx}: (${row.map(x=>x.toFixed(3)).join(', ')}) → (${norm.map(x=>x.toFixed(4)).join(', ')})</div>`;
+    });
+    html += `</div>`;
+    el.className = 'zero-alert has-zeros';
+    el.innerHTML = html;
+  }
+}
+
+// ────────────────────────────────────────────────────────────
+// POINTS TABLE
+// ────────────────────────────────────────────────────────────
+function renderTable() {
+  const tbody = document.getElementById('points-tbody');
+  tbody.innerHTML = '';
+  state.points.forEach((pt, i) => {
+    const sum = pt.reduce((a,b)=>a+b,0);
+    const sumOk = Math.abs(sum - 1) < 0.001;
+    const hasZero = pt.some(x => x <= 0);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>
+        <span class="color-swatch" style="background:${COLORS[i]}"></span>
+        <span class="pt-label" style="margin-left:6px">Point ${i+1}</span>
+      </td>
+      <td><input class="comp-input" type="number" min="0" max="1" step="0.01"
+        value="${pt[0]}" data-pt="${i}" data-dim="0" oninput="onPointInput(this)"></td>
+      <td><input class="comp-input" type="number" min="0" max="1" step="0.01"
+        value="${pt[1]}" data-pt="${i}" data-dim="1" oninput="onPointInput(this)"></td>
+      <td><input class="comp-input" type="number" min="0" max="1" step="0.01"
+        value="${pt[2]}" data-pt="${i}" data-dim="2" oninput="onPointInput(this)"></td>
+      <td><span class="sum-display ${sumOk?'sum-ok':'sum-warn'}">${sum.toFixed(3)}</span></td>
+      <td><span class="zero-badge${hasZero?'':' hidden'}">⚠ has zero</span></td>
+      <td>${state.points.length > 1
+        ? `<button class="remove-btn" onclick="removePoint(${i})" title="Remove">×</button>`
+        : ''
+      }</td>`;
+    tbody.appendChild(row);
+  });
+  document.getElementById('add-point-btn').disabled = state.points.length >= 5;
+}
+
+function onPointInput(input) {
+  const i = parseInt(input.dataset.pt);
+  const d = parseInt(input.dataset.dim);
+  const val = parseFloat(input.value);
+  if (!isNaN(val) && val >= 0) {
+    state.points[i][d] = val;
+    updateAll();
+  }
+}
+
+function addPoint() {
+  if (state.points.length >= 5) return;
+  state.points.push([0.33, 0.33, 0.34]);
+  updateAll();
+}
+
+function removePoint(i) {
+  if (state.points.length <= 1) return;
+  state.points.splice(i, 1);
+  updateAll();
+}
+
+// ────────────────────────────────────────────────────────────
+// EPS CONTROLS
+// ────────────────────────────────────────────────────────────
+function onEpsSliderChange(logVal) {
+  const eps = Math.round(Math.pow(10, parseFloat(logVal)) * 10000) / 10000;
+  state.eps = eps;
+  document.getElementById('eps-number').value = eps;
+  renderCLR();
+  updateZeroAlert();
+}
+
+function onEpsNumberChange(val) {
+  const eps = Math.max(0.0001, Math.min(0.2, parseFloat(val) || 0.01));
+  state.eps = eps;
+  document.getElementById('eps-slider').value = Math.log10(eps).toFixed(3);
+  renderCLR();
+  updateZeroAlert();
+}
+
+// ────────────────────────────────────────────────────────────
+// UPDATE ALL
+// ────────────────────────────────────────────────────────────
+function updateAll() {
+  renderTable();
+  updateZeroAlert();
+  renderAHC();
+  renderCLR();
+}
+
+// ────────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  updateAll();
+});
+</script>
+</body>
+</html>
