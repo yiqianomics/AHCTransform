@@ -558,14 +558,14 @@ body {
             <div class="eps-input-row">
               <span class="eps-label">ε =</span>
               <input type="number" class="eps-number-input" id="eps-number"
-                min="0.0001" max="0.2" step="0.001" value="0.01"
+                min="0.0002" max="1" step="0.001" value="0.01"
                 oninput="onEpsNumberChange(this.value)">
             </div>
             <input type="range" class="eps-slider" id="eps-slider"
-              min="-3.699" max="-0.699" step="0.001" value="-2"
+              min="-3.699" max="0" step="0.001" value="-2"
               oninput="onEpsSliderChange(this.value)">
             <div class="eps-range-labels">
-              <span>0.0002</span><span>0.001</span><span>0.01</span><span>0.1</span><span>0.2</span>
+              <span>0.0002</span><span>0.001</span><span>0.01</span><span>0.1</span><span>1</span>
             </div>
           </div>
           <div class="zero-alert" id="zero-alert"></div>
@@ -622,25 +622,29 @@ body {
   <div class="insight-grid">
     <div class="insight-card ahc-card">
       <div class="insight-icon">✅</div>
-      <div class="insight-title">Why AHC handles zeros gracefully</div>
+      <div class="insight-title">Why AHC works naturally with zeros</div>
       <div class="insight-body">
-        AHC maps each composition π to its square root q = √π on the positive orthant of the unit sphere. This is well-defined even when some components are zero — the zero simply maps to zero on the sphere. The subsequent centering onto the zero-sum plane is a smooth projection that introduces no singularity.
+        AHC first represents a composition through its square-root coordinates, q<sub>i</sub> = √π<sub>i</sub>. This representation is well-defined on the closed simplex, including boundary points where some components are exactly zero. A zero component simply remains zero after the square-root step, so the transformation does not require any artificial adjustment before it can be applied.
+        <br><br>
+        After this step, AHC centers the transformed coordinates to obtain a zero-sum representation. Because all coordinates remain finite, zero-containing compositions can be transformed directly and consistently.
         <ul>
-          <li>No pseudo-count needed — results are exact</li>
-          <li>Boundary points (with zeros) map to the boundary of the sphere</li>
-          <li>Transformation is stable and reproducible</li>
+          <li><strong>No pseudo-count is required</strong> — zeros are handled as part of the original composition</li>
+          <li><strong>Boundary points remain valid</strong> — components equal to zero do not create undefined values</li>
+          <li><strong>Results are reproducible</strong> — the transformed coordinates do not depend on an arbitrary tuning choice</li>
         </ul>
       </div>
     </div>
     <div class="insight-card clr-card">
       <div class="insight-icon">⚠️</div>
-      <div class="insight-title">Why zeros break CLR</div>
+      <div class="insight-title">Why zeros are problematic for CLR</div>
       <div class="insight-body">
-        CLR requires taking log(πᵢ), which diverges to −∞ as πᵢ → 0. A pseudo-count ε is added before log-transformation, but this is <strong>arbitrary</strong>: the result changes dramatically depending on the chosen ε. Try dragging the ε slider above and watch the zero-containing points jump around in the CLR plot.
+        CLR is based on logarithms of the compositional components. When a component π<sub>i</sub> is zero, log(π<sub>i</sub>) is undefined; as π<sub>i</sub> approaches zero, the log value tends to −∞. Therefore, CLR cannot be applied directly to compositions with exact zeros.
+        <br><br>
+        A common workaround is to replace zeros with a small pseudo-count ε before applying CLR. However, this introduces an analyst-chosen parameter: different values of ε can produce noticeably different transformed coordinates, especially for samples containing zeros. In the visualization above, changing the ε slider shows how zero-containing points can shift in the CLR space.
         <ul>
-          <li>The choice of ε is subjective and affects results</li>
-          <li>Small ε pushes points to extreme coordinates</li>
-          <li>Downstream analyses (PCA, regression) are ε-dependent</li>
+          <li><strong>CLR is undefined at exact zeros</strong></li>
+          <li><strong>Pseudo-count replacement changes the data before transformation</strong></li>
+          <li><strong>Downstream analyses can depend on the chosen ε</strong>, including PCA, clustering, regression, and distance-based comparisons</li>
         </ul>
       </div>
     </div>
@@ -943,9 +947,9 @@ function renderAHC() {
     ...buildAxes(1.6, 'rgba(39,245,181,0.8)'),
     ...arrowTraces(Pi, Q, activeColors),
     ...arrowTracesDash(Q, Z, activeColors),
-    pointsTrace(Pi, 'composition π', 'circle',  7, 0.95, activeColors),
-    pointsTrace(Q,  '√π on sphere',  'diamond', 8, 0.95, activeColors),
-    pointsTrace(Z,  'AHC(π)',        'square',  8, 0.95, activeColors)
+    pointsTrace(Pi, 'composition π', 'circle',  5, 0.95, activeColors),
+    pointsTrace(Q,  '√π on sphere',  'diamond', 6, 0.95, activeColors),
+    pointsTrace(Z,  'AHC(π)',        'square',  6, 0.95, activeColors)
   ].flat();
 
   const axR = [-1.25, 1.25];
@@ -974,9 +978,9 @@ function renderCLR() {
     ...buildAxes(axMax * 0.8, 'rgba(39,245,181,0.8)'),
     ...arrowTraces(Pi, Pi_pos, activeColors),
     ...arrowTracesDash(Pi_pos, CLR, activeColors),
-    pointsTrace(Pi,     'composition π',    'circle',  7, 0.95, activeColors),
-    pointsTrace(Pi_pos, `π after ε=${eps}`, 'diamond', 7, 0.75, activeColors),
-    pointsTrace(CLR,    'CLR(π)',           'square',  8, 0.95, activeColors)
+    pointsTrace(Pi,     'composition π',    'circle',  5, 0.95, activeColors),
+    pointsTrace(Pi_pos, `π after ε=${eps}`, 'diamond', 5, 0.75, activeColors),
+    pointsTrace(CLR,    'CLR(π)',           'square',  6, 0.95, activeColors)
   ].flat();
 
   const layout = makeLayout(`CLR transformation  (ε = ${eps})`, axR);
@@ -1082,7 +1086,7 @@ function onEpsSliderChange(logVal) {
 }
 
 function onEpsNumberChange(val) {
-  const eps = Math.max(0.0001, Math.min(0.2, parseFloat(val) || 0.01));
+  const eps = Math.max(0.0002, Math.min(1, parseFloat(val) || 0.01));
   state.eps = eps;
   document.getElementById('eps-slider').value = Math.log10(eps).toFixed(3);
   renderCLR();
