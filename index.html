@@ -965,6 +965,15 @@ body {
   color: var(--text-light);
 }
 
+.site-footer a {
+  color: var(--accent-ahc);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
 .quick-guide {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -1059,11 +1068,9 @@ body {
       requires strictly positive components.
     </p>
     <p class="sublead">
-      The example uses three-part compositions so that the original simplex,
-      square-root representation, and transformed zero-sum coordinates can be
-      shown directly. The visualization uses \(p=3\) only because three-part
-      compositions can be plotted directly; the formulas are written for general
-      \(p\).
+      The example uses \(p=3\) only for display because three-part compositions
+      can be plotted directly. The mathematical definitions below are written
+      for general \(p\).
     </p>
   </div>
 </header>
@@ -1077,7 +1084,7 @@ body {
       <h2 id="how-to-use-title">How to use this visualization</h2>
       <ol>
         <li>Choose the boundary or near-zero preset.</li>
-        <li>Move the ε slider.</li>
+        <li>Move the CLR zero-replacement value \(\varepsilon\).</li>
         <li>Compare the AHC and CLR coordinates and the numerical summary.</li>
       </ol>
     </div>
@@ -1287,7 +1294,7 @@ body {
           \( z_{\mathrm{CLR}}(\pi;\varepsilon)=\operatorname{clr}\{r(\pi;\varepsilon)\}. \)
         </p>
         <p>
-          This requires \( \pi_i>0 \) for all components. When zeros are present, this visualization replaces zero components by \( \varepsilon \), renormalizes the composition, and then applies CLR.
+          This requires \( \pi_i>0 \) for all components. When zeros are present, this visualization replaces zero components by \( \varepsilon \), renormalizes the composition, and then applies CLR. Only exact zero components are replaced in this demonstration; positive components are not thresholded.
         </p>
       </article>
     </div>
@@ -1310,9 +1317,9 @@ body {
       </thead>
       <tbody>
         <tr>
-          <td>Domain</td>
-          <td>Closed simplex \( \Delta^{p-1} \)</td>
-          <td>Strictly positive simplex before replacement; zero-containing compositions require preprocessing</td>
+          <td>Domain before preprocessing</td>
+          <td>Closed simplex \( \Delta^{p-1} \), including boundary points</td>
+          <td>Strictly positive simplex; zero-containing compositions require preprocessing</td>
         </tr>
         <tr>
           <td>Exact zeros</td>
@@ -1330,7 +1337,7 @@ body {
           <td>Zero-sum log-ratio coordinates</td>
         </tr>
         <tr>
-          <td>Behavior at the boundary</td>
+          <td>Behavior at and near the boundary</td>
           <td>Finite for exact zeros</td>
           <td>Log terms diverge as components approach zero</td>
         </tr>
@@ -1380,7 +1387,9 @@ body {
 </main>
 
 <footer class="site-footer">
-  Interactive visualization · AHC and CLR transformations for compositional data · <span>Version: 2026-06-23</span>
+  Yiqian Zhang · AHC transformation project ·
+  <a href="https://github.com/yiqianomics/AHCTransform">Source code on GitHub</a>
+  · Updated June 2026 · <span>Version: 2026-06-23</span>
 </footer>
 
 <!-- ════════════════════════════════════════════ JAVASCRIPT -->
