@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AHC and CLR Transformations for Compositions with Zeros</title>
+<title>AHC and CLR Transformations for Zero-Containing Compositions</title>
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
 <script>
 window.MathJax = {
@@ -964,6 +964,85 @@ body {
   background: var(--surface);
   color: var(--text-light);
 }
+
+.quick-guide {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 18px 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  gap: 18px;
+}
+
+.quick-guide h2 {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.quick-guide ol {
+  padding-left: 20px;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+}
+
+.quick-guide li {
+  margin-bottom: 4px;
+}
+
+.marker-key {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-left: 1px solid var(--border);
+  padding-left: 18px;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.marker-key-title {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.marker-key-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.marker-sample {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 0 1px rgba(31, 41, 51, 0.18);
+  flex: 0 0 auto;
+}
+
+.marker-sample.thin {
+  border-color: #475569;
+}
+
+.marker-sample.open {
+  background: transparent;
+  border: 2px solid #111827;
+  box-shadow: none;
+}
+
+@media (max-width: 800px) {
+  .quick-guide {
+    grid-template-columns: 1fr;
+  }
+  .marker-key {
+    border-left: none;
+    border-top: 1px solid var(--border);
+    padding-left: 0;
+    padding-top: 14px;
+  }
+}
 </style>
 </head>
 <body>
@@ -972,22 +1051,43 @@ body {
 <header class="site-header">
   <div class="header-inner">
     <div class="eyebrow">Interactive method visualization</div>
-    <h1>AHC and CLR Transformations for Compositions with Zeros</h1>
+    <h1>AHC and CLR Transformations for Zero-Containing Compositions</h1>
     <p class="lead">
-      This visualization compares a square-root geometric transformation that is
-      defined on the closed simplex with a log-ratio transformation that requires
-      strictly positive components.
+      This visualization compares the Arc-Hellinger Centered (AHC)
+      transformation, a square-root geometric transformation defined on the
+      closed simplex, with the Centered Log-Ratio (CLR) transformation, which
+      requires strictly positive components.
     </p>
     <p class="sublead">
       The example uses three-part compositions so that the original simplex,
       square-root representation, and transformed zero-sum coordinates can be
-      shown directly.
+      shown directly. The visualization uses \(p=3\) only because three-part
+      compositions can be plotted directly; the formulas are written for general
+      \(p\).
     </p>
   </div>
 </header>
 
 <!-- ════════════════════════════════════════════ MAIN -->
 <main class="main-content">
+
+  <section class="quick-guide" aria-labelledby="how-to-use-title">
+    <div>
+      <div class="section-label">Guide</div>
+      <h2 id="how-to-use-title">How to use this visualization</h2>
+      <ol>
+        <li>Choose the boundary or near-zero preset.</li>
+        <li>Move the ε slider.</li>
+        <li>Compare the AHC and CLR coordinates and the numerical summary.</li>
+      </ol>
+    </div>
+    <div class="marker-key" aria-label="Marker style key">
+      <div class="marker-key-title">Interior vs boundary key</div>
+      <div class="marker-key-row"><span class="marker-sample"></span><span>Filled markers: interior compositions</span></div>
+      <div class="marker-key-row"><span class="marker-sample thin"></span><span>Thin-outlined markers: near-boundary compositions</span></div>
+      <div class="marker-key-row"><span class="marker-sample open"></span><span>Outlined markers: compositions with at least one exact zero</span></div>
+    </div>
+  </section>
 
   <!-- ── CONTROLS CARD ── -->
   <div class="card">
@@ -996,7 +1096,7 @@ body {
         <div class="section-label">Input</div>
         <h2>Input compositions</h2>
       </div>
-      <p>Enter nonnegative component values. Each row is normalized to sum to one before transformation.</p>
+      <p>Enter nonnegative component values. Each row with positive total is normalized to sum to one before transformation. Rows with all components equal to zero are not valid compositions.</p>
     </div>
     <div class="card-body">
       <div class="controls-grid">
@@ -1037,7 +1137,7 @@ body {
         <div class="clr-control-panel">
           <div class="eps-section">
             <div class="eps-title">CLR zero-replacement value ε</div>
-            <div class="eps-subtitle">CLR is undefined when any component is exactly zero. In this visualization, zero components are replaced by ε, the composition is renormalized, and CLR is then applied to the modified composition.</div>
+            <div class="eps-subtitle">CLR is undefined when any component is exactly zero. In this visualization, exact zero components are replaced by ε, the composition is renormalized, and CLR is then applied to the modified composition. Nonzero components are not thresholded or replaced.</div>
             <div class="eps-input-row">
               <span class="eps-label">ε =</span>
               <input type="number" class="eps-number-input" id="eps-number"
@@ -1074,14 +1174,14 @@ body {
           <span class="method-tag ahc">AHC</span>
           <div>
             <div class="plot-card-title">AHC: direct transformation on the closed simplex</div>
-            <div class="plot-card-sub">π → q = √π → z<sub>AHC</sub>(π) &nbsp;·&nbsp; No zero-replacement step is required.</div>
+            <div class="plot-card-sub">\( \pi \to q=\sqrt{\pi} \to z_{\mathrm{AHC}}(\pi) \) &nbsp;·&nbsp; No zero-replacement step is required.</div>
           </div>
         </div>
       </div>
       <div class="plot-legend">
         <div class="legend-item"><div class="legend-shape circle" style="border-color:#555"></div> Original composition π</div>
         <div class="legend-item"><div class="legend-shape diamond" style="border-color:#555"></div> Square-root point q = √π</div>
-        <div class="legend-item"><div class="legend-shape square" style="border-color:#555"></div> AHC coordinate z<sub>AHC</sub>(π)</div>
+        <div class="legend-item"><div class="legend-shape square" style="border-color:#555"></div> AHC coordinate \(z_{\mathrm{AHC}}(\pi)\)</div>
       </div>
       <div class="plot-div" id="ahc-plot"></div>
       <div class="plot-card-note">Boundary points remain finite under the AHC transformation.</div>
@@ -1094,14 +1194,14 @@ body {
           <span class="method-tag clr">CLR</span>
           <div>
             <div class="plot-card-title">CLR: transformation after zero replacement</div>
-            <div class="plot-card-sub" id="clr-subtitle">π → r(π; ε) → z<sub>CLR</sub>(π; ε) &nbsp;·&nbsp; Move ε to see how zero-containing points depend on the replacement value.</div>
+            <div class="plot-card-sub" id="clr-subtitle">\( \pi \to r(\pi;\varepsilon) \to z_{\mathrm{CLR}}(\pi;\varepsilon) \) &nbsp;·&nbsp; Move ε to see how zero-containing points depend on the replacement value.</div>
           </div>
         </div>
       </div>
       <div class="plot-legend">
         <div class="legend-item"><div class="legend-shape circle" style="border-color:#555"></div> Original composition π</div>
         <div class="legend-item"><div class="legend-shape diamond" style="border-color:#555"></div> Zero-replaced composition r(π; ε)</div>
-        <div class="legend-item"><div class="legend-shape square" style="border-color:#555"></div> CLR coordinate z<sub>CLR</sub>(π; ε)</div>
+        <div class="legend-item"><div class="legend-shape square" style="border-color:#555"></div> CLR coordinate \(z_{\mathrm{CLR}}(\pi;\varepsilon)\)</div>
       </div>
       <div class="plot-div" id="clr-plot"></div>
       <div class="plot-card-note">Zero-containing points move as the replacement value ε changes.</div>
@@ -1109,14 +1209,14 @@ body {
 
   </div>
 
-  <!-- ── NUMERICAL READOUT ── -->
+  <!-- ── NUMERICAL SUMMARY ── -->
   <div class="card readout-card">
     <div class="card-header">
       <div>
-        <div class="section-label">Readout</div>
-        <h2>Numerical comparison</h2>
+        <div class="section-label">Numerical summary</div>
+        <h2>Coordinate norms and ε-sensitivity</h2>
       </div>
-      <p>Norms are computed from the transformed zero-sum coordinates. ΔCLR is measured relative to ε = 10⁻³.</p>
+      <p>All norms are Euclidean norms in the transformed zero-sum coordinate space. \( \Delta_{\mathrm{CLR}}(\varepsilon)=\|z_{\mathrm{CLR}}(\pi;\varepsilon)-z_{\mathrm{CLR}}(\pi;10^{-3})\|_2 \).</p>
     </div>
     <div class="card-body">
       <div class="readout-table-wrap">
@@ -1155,17 +1255,36 @@ body {
           \( z_{\mathrm{AHC}}(\pi)=\frac{\arcsin(s)}{s}(q-cq_0). \)
         </p>
         <p>
-          The expression is interpreted by continuity when \(s=0\). The square-root map is defined when a component is exactly zero.
+          The expression is interpreted by continuity when \(s=0\). This case occurs at the uniform composition, where \(q=q_0\), and the transformed coordinate is defined as \(z_{\mathrm{AHC}}(\pi)=0\). The square-root map is defined when a component is exactly zero.
         </p>
       </article>
 
       <article class="formula-card clr-card">
         <h3>CLR after zero replacement</h3>
         <p>
-          CLR is defined by
+          Define the zero-replaced and renormalized composition by
+        </p>
+        <p class="display-math">
+          \[
+          \tilde{\pi}_i(\varepsilon)=
+          \begin{cases}
+          \varepsilon, & \pi_i=0,\\
+          \pi_i, & \pi_i>0,
+          \end{cases}
+          \qquad
+          r_i(\pi;\varepsilon)=
+          \frac{\tilde{\pi}_i(\varepsilon)}
+          {\sum_{j=1}^{p}\tilde{\pi}_j(\varepsilon)}.
+          \]
+        </p>
+        <p>
+          CLR is then defined by
         </p>
         <p class="display-math">
           \( \operatorname{clr}(\pi)_i=\log(\pi_i)-p^{-1}\sum_{j=1}^{p}\log(\pi_j). \)
+        </p>
+        <p class="display-math">
+          \( z_{\mathrm{CLR}}(\pi;\varepsilon)=\operatorname{clr}\{r(\pi;\varepsilon)\}. \)
         </p>
         <p>
           This requires \( \pi_i>0 \) for all components. When zeros are present, this visualization replaces zero components by \( \varepsilon \), renormalizes the composition, and then applies CLR.
@@ -1192,8 +1311,8 @@ body {
       <tbody>
         <tr>
           <td>Domain</td>
-          <td>Closed simplex, including boundary points</td>
-          <td>Strictly positive simplex before replacement</td>
+          <td>Closed simplex \( \Delta^{p-1} \)</td>
+          <td>Strictly positive simplex before replacement; zero-containing compositions require preprocessing</td>
         </tr>
         <tr>
           <td>Exact zeros</td>
@@ -1211,8 +1330,8 @@ body {
           <td>Zero-sum log-ratio coordinates</td>
         </tr>
         <tr>
-          <td>Behavior near zero</td>
-          <td>Finite</td>
+          <td>Behavior at the boundary</td>
+          <td>Finite for exact zeros</td>
           <td>Log terms diverge as components approach zero</td>
         </tr>
         <tr>
@@ -1261,7 +1380,7 @@ body {
 </main>
 
 <footer class="site-footer">
-  Interactive visualization · AHC and CLR transformations for compositional data
+  Interactive visualization · AHC and CLR transformations for compositional data · <span>Version: 2026-06-23</span>
 </footer>
 
 <!-- ════════════════════════════════════════════ JAVASCRIPT -->
@@ -1316,8 +1435,14 @@ let state = {
 // ────────────────────────────────────────────────────────────
 function normalize(row) {
   const s = row.reduce((a, b) => a + b, 0);
-  if (s <= 0) return row.map(() => 1/row.length);
+  if (s <= 0) return null;
   return row.map(x => x / s);
+}
+
+function validCompositions() {
+  return state.points
+    .map((row, index) => ({ index, row: normalize(row) }))
+    .filter(item => item.row !== null);
 }
 
 function ahcTransform(Pi) {
@@ -1342,7 +1467,7 @@ function ahcTransform(Pi) {
 
 function clrTransform(Pi, eps) {
   const Pi_pos = Pi.map(row => {
-    const r = row.map(x => (x <= 0) ? eps : x);
+    const r = row.map(x => (x <= ZERO_TOL) ? eps : x);
     const s = r.reduce((a, b) => a + b, 0);
     return r.map(x => x / s);
   });
@@ -1469,7 +1594,7 @@ function buildAxes(lim, color) {
 // ────────────────────────────────────────────────────────────
 function norm3(v) { return Math.sqrt(v.reduce((s,x)=>s+x*x,0)); }
 
-function pointsTrace(X, label, symbol, size, opacity, activeColors, compositionClasses) {
+function pointsTrace(X, label, symbol, size, opacity, activeColors, compositionClasses, pointLabels) {
   const groups = [
     { key:'interior', symbol, markerSize:size, lineColor:'#ffffff', lineWidth:0.7 },
     { key:'near-zero', symbol, markerSize:size, lineColor:'#475569', lineWidth:1.2 },
@@ -1497,7 +1622,7 @@ function pointsTrace(X, label, symbol, size, opacity, activeColors, compositionC
         line:{color:group.lineColor, width:group.lineWidth}
       },
       hovertext: idx.map(i =>
-        `${label}<br>Point ${i+1}<br>${compositionClasses[i]} composition<br>(${X[i][0].toFixed(4)}, ${X[i][1].toFixed(4)}, ${X[i][2].toFixed(4)})`
+        `${label}<br>${pointLabels[i]}<br>${compositionClasses[i]} composition<br>(${X[i][0].toFixed(4)}, ${X[i][1].toFixed(4)}, ${X[i][2].toFixed(4)})`
       ),
       hoverinfo:'text',
       name:label,
@@ -1601,9 +1726,14 @@ const plotConfig = {
 // RENDER AHC
 // ────────────────────────────────────────────────────────────
 function renderAHC() {
-  const Pi = state.points.map(normalize);
-  const n = Pi.length;
-  const activeColors = COLORS.slice(0, n);
+  const valid = validCompositions();
+  const Pi = valid.map(item => item.row);
+  const activeColors = valid.map(item => COLORS[item.index]);
+  const pointLabels = valid.map(item => `Point ${item.index + 1}`);
+  if (Pi.length === 0) {
+    Plotly.react('ahc-plot', [], makeLayout('AHC: direct transformation', [-1.25, 1.25]), plotConfig);
+    return;
+  }
   const compositionClasses = Pi.map(compositionClass);
   const { Q, Z } = ahcTransform(Pi);
 
@@ -1618,9 +1748,9 @@ function renderAHC() {
     ...buildAxes(1.6, 'rgba(95,107,122,0.72)'),
     ...arrowTraces(Pi, Q, activeColors),
     ...arrowTracesDash(Q, Z, activeColors),
-    pointsTrace(Pi, 'Original composition π', 'circle',  5, 0.95, activeColors, compositionClasses),
-    pointsTrace(Q,  'Square-root point q = √π',  'diamond', 6, 0.95, activeColors, compositionClasses),
-    pointsTrace(Z,  'AHC coordinate z_AHC(π)', 'square',  6, 0.95, activeColors, compositionClasses)
+    pointsTrace(Pi, 'Original composition π', 'circle',  5, 0.95, activeColors, compositionClasses, pointLabels),
+    pointsTrace(Q,  'Square-root point q = √π',  'diamond', 6, 0.95, activeColors, compositionClasses, pointLabels),
+    pointsTrace(Z,  'AHC coordinate z_AHC(π)', 'square',  6, 0.95, activeColors, compositionClasses, pointLabels)
   ].flat();
 
   const axR = [-1.25, 1.25];
@@ -1632,10 +1762,19 @@ function renderAHC() {
 // RENDER CLR
 // ────────────────────────────────────────────────────────────
 function renderCLR() {
-  const Pi = state.points.map(normalize);
-  const n = Pi.length;
-  const activeColors = COLORS.slice(0, n);
+  const valid = validCompositions();
+  const Pi = valid.map(item => item.row);
+  const activeColors = valid.map(item => COLORS[item.index]);
+  const pointLabels = valid.map(item => `Point ${item.index + 1}`);
   const eps = state.eps;
+  const subtitle = document.getElementById('clr-subtitle');
+  if (Pi.length === 0) {
+    Plotly.react('clr-plot', [], makeLayout(`CLR after zero replacement (ε = ${formatEps(eps)})`, [-1.6, 1.6]), plotConfig);
+    subtitle.innerHTML =
+      `\\( \\pi \\to r(\\pi;\\varepsilon) \\to z_{\\mathrm{CLR}}(\\pi;\\varepsilon) \\) &nbsp;·&nbsp; Enter at least one row with positive total to compute CLR.`;
+    if (window.MathJax?.typesetPromise) MathJax.typesetPromise([subtitle]);
+    return;
+  }
   const compositionClasses = Pi.map(compositionClass);
   const { Pi_pos, CLR } = clrTransform(Pi, eps);
   const rangeCLR = state.lockClrScale ? clrTransform(Pi, EPS_MIN).CLR : CLR;
@@ -1652,42 +1791,58 @@ function renderCLR() {
     ...buildAxes(axMax * 0.8, 'rgba(95,107,122,0.72)'),
     ...arrowTraces(Pi, Pi_pos, activeColors),
     ...arrowTracesDash(Pi_pos, CLR, activeColors),
-    pointsTrace(Pi,     'Original composition π',    'circle',  5, 0.95, activeColors, compositionClasses),
-    pointsTrace(Pi_pos, `Zero-replaced composition r(π; ε=${formatEps(eps)})`, 'diamond', 5, 0.75, activeColors, compositionClasses),
-    pointsTrace(CLR,    'CLR coordinate z_CLR(π; ε)', 'square',  6, 0.95, activeColors, compositionClasses)
+    pointsTrace(Pi,     'Original composition π',    'circle',  5, 0.95, activeColors, compositionClasses, pointLabels),
+    pointsTrace(Pi_pos, `Zero-replaced composition r(π; ε=${formatEps(eps)})`, 'diamond', 5, 0.75, activeColors, compositionClasses, pointLabels),
+    pointsTrace(CLR,    'CLR coordinate z_CLR(π; ε)', 'square',  6, 0.95, activeColors, compositionClasses, pointLabels)
   ].flat();
 
   const layout = makeLayout(`CLR after zero replacement (ε = ${formatEps(eps)})`, axR);
   Plotly.react('clr-plot', traces, layout, plotConfig);
 
-  document.getElementById('clr-subtitle').innerHTML =
-    `π → r(π; ε = ${formatEps(eps)}) → z<sub>CLR</sub>(π; ε) &nbsp;·&nbsp; Zero components replaced by ε, then renormalized before CLR.`;
+  subtitle.innerHTML =
+    `\\( \\pi \\to r(\\pi;\\varepsilon=${formatEps(eps)}) \\to z_{\\mathrm{CLR}}(\\pi;\\varepsilon) \\) &nbsp;·&nbsp; Zero components replaced by ε, then renormalized before CLR.`;
+  if (window.MathJax?.typesetPromise) MathJax.typesetPromise([subtitle]);
 }
 
 // ────────────────────────────────────────────────────────────
 // ZERO ALERT
 // ────────────────────────────────────────────────────────────
 function updateZeroAlert() {
-  const Pi = state.points.map(normalize);
+  const valid = validCompositions();
+  const Pi = valid.map(item => item.row);
+  const invalid = state.points
+    .map((row, index) => ({ index, sum: row.reduce((a, b) => a + b, 0) }))
+    .filter(item => item.sum <= 0);
   const affected = [];
   Pi.forEach((row, i) => {
     const zeros = row.reduce((s, x) => s + (x <= ZERO_TOL ? 1 : 0), 0);
-    if (zeros > 0) affected.push({ idx: i+1, row, zeros });
+    if (zeros > 0) affected.push({ idx: valid[i].index + 1, row, zeros });
   });
   const el = document.getElementById('zero-alert');
-  if (affected.length === 0) {
+  if (affected.length === 0 && invalid.length === 0) {
     el.className = 'zero-alert no-zeros';
     el.innerHTML = `<strong>No exact zero components.</strong> CLR can be evaluated directly for these rows.`;
   } else {
-    let html = `<strong>${affected.length} composition${affected.length>1?'s':''} contain exact zero components.</strong> For CLR, zero components are replaced by ε = ${formatEps(state.eps)} and the row is renormalized:`;
-    html += `<div class="eps-affected-list">`;
+    const parts = [];
+    if (invalid.length > 0) {
+      const rowWord = invalid.length > 1 ? 'rows have' : 'row has';
+      const invalidText = invalid.length > 1
+        ? 'These rows are not valid compositions and are omitted from the transformations.'
+        : 'This row is not a valid composition and is omitted from the transformations.';
+      parts.push(`<strong>${invalid.length} ${rowWord} all components equal to zero.</strong> ${invalidText}`);
+    }
+    if (affected.length > 0) {
+      parts.push(`<strong>${affected.length} composition${affected.length>1?'s':''} contain exact zero components.</strong> For CLR, zero components are replaced by ε = ${formatEps(state.eps)} and the row is renormalized:`);
+    }
+    let html = parts.join(' ');
+    html += affected.length > 0 ? `<div class="eps-affected-list">` : '';
     affected.forEach(({idx, row}) => {
       const Pi_pos = row.map(x => x <= ZERO_TOL ? state.eps : x);
       const s = Pi_pos.reduce((a,b)=>a+b,0);
       const norm = Pi_pos.map(x=>x/s);
       html += `<div class="eps-affected-item">Point ${idx}: (${row.map(x=>x.toFixed(3)).join(', ')}) → (${norm.map(x=>x.toFixed(4)).join(', ')})</div>`;
     });
-    html += `</div>`;
+    html += affected.length > 0 ? `</div>` : '';
     el.className = 'zero-alert has-zeros';
     el.innerHTML = html;
   }
@@ -1701,7 +1856,8 @@ function renderTable() {
   tbody.innerHTML = '';
   state.points.forEach((pt, i) => {
     const sum = pt.reduce((a,b)=>a+b,0);
-    const sumOk = Math.abs(sum - 1) < 0.001;
+    const isInvalid = sum <= 0;
+    const sumOk = !isInvalid && Math.abs(sum - 1) < 0.001;
     const hasZero = pt.some(x => x <= ZERO_TOL);
     const row = document.createElement('tr');
     row.innerHTML = `
@@ -1716,7 +1872,7 @@ function renderTable() {
       <td><input class="comp-input" type="number" min="0" max="1" step="0.01"
         value="${pt[2]}" data-pt="${i}" data-dim="2" oninput="onPointInput(this)"></td>
       <td><span class="sum-display ${sumOk?'sum-ok':'sum-warn'}">${sum.toFixed(3)}</span></td>
-      <td><span class="zero-badge${hasZero?'':' hidden'}">Boundary</span></td>
+      <td><span class="zero-badge${(hasZero || isInvalid)?'':' hidden'}">${isInvalid ? 'Invalid' : 'Boundary'}</span></td>
       <td>${state.points.length > 1
         ? `<button class="remove-btn" onclick="removePoint(${i})" title="Remove composition" aria-label="Remove composition ${i+1}">×</button>`
         : ''
@@ -1792,7 +1948,12 @@ function renderReadout() {
   const tbody = document.getElementById('readout-tbody');
   if (!tbody) return;
 
-  const Pi = state.points.map(normalize);
+  const valid = validCompositions();
+  const Pi = valid.map(item => item.row);
+  if (Pi.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5">Enter at least one row with positive total to compute transformed coordinates.</td></tr>`;
+    return;
+  }
   const { Z } = ahcTransform(Pi);
   const { CLR } = clrTransform(Pi, state.eps);
   const { CLR: CLRDefault } = clrTransform(Pi, DEFAULT_EPS);
@@ -1803,7 +1964,7 @@ function renderReadout() {
     const deltaCLR = norm3(CLR[i].map((x, j) => x - CLRDefault[i][j]));
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td>Point ${i + 1}</td>
+      <td>Point ${valid[i].index + 1}</td>
       <td>${hasZero ? 'Yes' : 'No'}</td>
       <td>${formatNorm(norm3(Z[i]))}</td>
       <td>${formatNorm(norm3(CLR[i]))}</td>

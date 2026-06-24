@@ -1,6 +1,6 @@
 # AHCTransform
 
-Interactive GitHub Pages visualization for AHC and CLR transformations on compositional data with zeros.
+Interactive GitHub Pages visualization for AHC and CLR transformations on zero-containing compositional data.
 
 ## GitHub Pages
 
