@@ -238,39 +238,6 @@ body {
 }
 .zero-badge.hidden { visibility: hidden; }
 
-.remove-btn {
-  width: 24px; height: 24px;
-  border-radius: 50%;
-  border: none;
-  background: transparent;
-  color: var(--text-xs);
-  cursor: pointer;
-  font-size: 1rem;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s, color 0.15s;
-}
-.remove-btn:hover { background: var(--danger-bg); color: var(--danger); }
-
-.add-point-btn {
-  margin-top: 12px;
-  padding: 8px 18px;
-  border-radius: var(--radius-sm);
-  border: 1.5px dashed var(--border);
-  background: transparent;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: inline-flex; align-items: center; gap: 6px;
-}
-.add-point-btn:hover:not(:disabled) {
-  border-color: #6366f1;
-  color: #6366f1;
-  background: rgba(99,102,241,0.05);
-}
-.add-point-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
 /* ── CLR CONTROLS ── */
 .clr-control-panel {
   display: flex;
@@ -412,19 +379,6 @@ body {
   align-items: flex-start;
   gap: 10px;
 }
-.method-tag {
-  padding: 3px 10px;
-  border-radius: 99px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0;
-  white-space: nowrap;
-  margin-top: 2px;
-}
-.method-tag.ahc { background: var(--accent-ahc-bg); color: var(--accent-ahc); border: 1px solid var(--accent-ahc-border); }
-.method-tag.clr { background: var(--accent-clr-bg); color: var(--accent-clr); border: 1px solid var(--accent-clr-border); }
-
 .plot-card-title { font-size: 1rem; font-weight: 700; color: var(--text); }
 .plot-card-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; line-height: 1.4; }
 
@@ -455,39 +409,6 @@ body {
 
 .plot-div { width: 100%; }
 
-/* ── INSIGHT ── */
-.insight-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-@media (max-width: 900px) { .insight-grid { grid-template-columns: 1fr; } }
-
-.insight-card {
-  border-radius: var(--radius);
-  padding: 22px 24px;
-  border: 1px solid;
-}
-.insight-card.ahc-card {
-  background: var(--accent-ahc-bg);
-  border-color: var(--accent-ahc-border);
-}
-.insight-card.clr-card {
-  background: var(--danger-bg);
-  border-color: var(--danger-border);
-}
-.insight-icon { font-size: 1.5rem; margin-bottom: 8px; }
-.insight-title {
-  font-size: 0.9rem;
-  font-weight: 700;
-  margin-bottom: 10px;
-}
-.insight-card.ahc-card .insight-title { color: var(--accent-ahc); }
-.insight-card.clr-card .insight-title { color: var(--danger-text); }
-.insight-body { font-size: 0.83rem; color: var(--text-muted); line-height: 1.6; }
-.insight-body ul { padding-left: 16px; margin-top: 6px; }
-.insight-body li { margin-bottom: 4px; }
-
 /* ── FOOTER ── */
 .site-footer {
   text-align: center;
@@ -496,16 +417,6 @@ body {
   color: var(--text-xs);
   border-top: 1px solid var(--border);
   margin-top: 8px;
-}
-
-/* ── UTILS ── */
-.section-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0;
-  margin-bottom: 4px;
 }
 
 /* ── RESEARCH NOTE RESTYLE ── */
@@ -566,16 +477,6 @@ body {
   margin: 0 auto;
 }
 
-.eyebrow,
-.section-label {
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-  color: var(--accent-ahc);
-  margin-bottom: 8px;
-}
-
 .site-header h1 {
   max-width: 860px;
   font-size: clamp(1.8rem, 3vw, 2.55rem);
@@ -612,7 +513,6 @@ body {
 .card,
 .plot-card,
 .formula-card,
-.note-card,
 .comparison-table {
   border-radius: var(--radius);
   box-shadow: var(--shadow);
@@ -684,14 +584,12 @@ body {
   color: var(--warning);
 }
 
-.add-point-btn,
 .preset-btn {
   min-height: 34px;
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
 }
 
-.add-point-btn:hover:not(:disabled),
 .preset-btn:hover {
   border-color: var(--accent-ahc);
   color: var(--accent-ahc);
@@ -800,11 +698,6 @@ body {
   padding: 16px 20px 14px;
 }
 
-.method-tag {
-  border-radius: var(--radius-sm);
-  letter-spacing: 0;
-}
-
 .plot-card-title {
   font-size: 1rem;
   line-height: 1.35;
@@ -846,46 +739,39 @@ body {
   margin-top: 4px;
 }
 
-.formula-grid,
-.notes-grid {
+.formula-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
 
 @media (max-width: 900px) {
-  .formula-grid,
-  .notes-grid {
+  .formula-grid {
     grid-template-columns: 1fr;
   }
 }
 
-.formula-card,
-.note-card {
+.formula-card {
   background: var(--surface);
   border: 1px solid var(--border);
   padding: 20px;
 }
 
-.formula-card.ahc-card,
-.note-card.ahc-card {
+.formula-card.ahc-card {
   border-top: 3px solid var(--accent-ahc);
 }
 
-.formula-card.clr-card,
-.note-card.clr-card {
+.formula-card.clr-card {
   border-top: 3px solid var(--accent-clr);
 }
 
-.formula-card h3,
-.note-card h3 {
+.formula-card h3 {
   font-size: 1rem;
   margin-bottom: 10px;
   color: var(--text);
 }
 
-.formula-card p,
-.note-card p {
+.formula-card p {
   color: var(--text-muted);
   font-size: 0.91rem;
 }
