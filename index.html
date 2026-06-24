@@ -928,6 +928,17 @@ body {
   border-bottom: none;
 }
 
+.scope-note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  padding: 16px 18px;
+}
+
 .readout-table-wrap {
   overflow-x: auto;
 }
@@ -1059,7 +1070,6 @@ body {
 <!-- ════════════════════════════════════════════ HEADER -->
 <header class="site-header">
   <div class="header-inner">
-    <div class="eyebrow">Interactive method visualization</div>
     <h1>AHC and CLR Transformations for Zero-Containing Compositions</h1>
     <p class="lead">
       This visualization compares the Arc-Hellinger Centered (AHC)
@@ -1080,7 +1090,6 @@ body {
 
   <section class="quick-guide" aria-labelledby="how-to-use-title">
     <div>
-      <div class="section-label">Guide</div>
       <h2 id="how-to-use-title">How to use this visualization</h2>
       <ol>
         <li>Choose the boundary or near-zero preset.</li>
@@ -1100,7 +1109,6 @@ body {
   <div class="card">
     <div class="card-header">
       <div>
-        <div class="section-label">Input</div>
         <h2>Input compositions</h2>
       </div>
       <p>Enter nonnegative component values. Each row with positive total is normalized to sum to one before transformation. Rows with all components equal to zero are not valid compositions.</p>
@@ -1120,21 +1128,16 @@ body {
                   <th>π₃</th>
                   <th style="width:80px">Row sum</th>
                   <th style="width:120px">Zero component?</th>
-                  <th style="width:30px"></th>
                 </tr>
               </thead>
               <tbody id="points-tbody"></tbody>
             </table>
           </div>
-          <button class="add-point-btn" id="add-point-btn" onclick="addPoint()" aria-label="Add composition">
-            <span style="font-size:1.1rem;line-height:1">+</span> Add composition
-          </button>
           <div class="preset-panel">
-            <div class="section-label">Presets</div>
             <div class="preset-row" aria-label="Composition presets">
-              <button class="preset-btn" type="button" onclick="applyPreset('interior')">Interior example</button>
-              <button class="preset-btn" type="button" onclick="applyPreset('boundary')">Boundary example</button>
-              <button class="preset-btn" type="button" onclick="applyPreset('nearZero')">Near-zero example</button>
+              <button class="preset-btn" type="button" onclick="applyPreset('interior')">Interior</button>
+              <button class="preset-btn" type="button" onclick="applyPreset('boundary')">Boundary</button>
+              <button class="preset-btn" type="button" onclick="applyPreset('nearZero')">Near-zero</button>
               <button class="preset-btn" type="button" onclick="applyPreset('reset')">Reset</button>
             </div>
           </div>
@@ -1172,13 +1175,17 @@ body {
   </div>
 
   <!-- ── PLOTS GRID ── -->
+  <div class="section-heading">
+    <h2>Transformation comparison</h2>
+    <p>Compare the direct AHC transformation with the CLR transformation after exact-zero replacement.</p>
+  </div>
+
   <div class="plots-grid">
 
     <!-- AHC Plot -->
     <div class="plot-card">
       <div class="plot-card-header">
         <div class="plot-card-header-inner">
-          <span class="method-tag ahc">AHC</span>
           <div>
             <div class="plot-card-title">AHC: direct transformation on the closed simplex</div>
             <div class="plot-card-sub">\( \pi \to q=\sqrt{\pi} \to z_{\mathrm{AHC}}(\pi) \) &nbsp;·&nbsp; No zero-replacement step is required.</div>
@@ -1198,7 +1205,6 @@ body {
     <div class="plot-card">
       <div class="plot-card-header">
         <div class="plot-card-header-inner">
-          <span class="method-tag clr">CLR</span>
           <div>
             <div class="plot-card-title">CLR: transformation after zero replacement</div>
             <div class="plot-card-sub" id="clr-subtitle">\( \pi \to r(\pi;\varepsilon) \to z_{\mathrm{CLR}}(\pi;\varepsilon) \) &nbsp;·&nbsp; Move ε to see how zero-containing points depend on the replacement value.</div>
@@ -1220,7 +1226,6 @@ body {
   <div class="card readout-card">
     <div class="card-header">
       <div>
-        <div class="section-label">Numerical summary</div>
         <h2>Coordinate norms and ε-sensitivity</h2>
       </div>
       <p>All norms are Euclidean norms in the transformed zero-sum coordinate space. \( \Delta_{\mathrm{CLR}}(\varepsilon)=\|z_{\mathrm{CLR}}(\pi;\varepsilon)-z_{\mathrm{CLR}}(\pi;10^{-3})\|_2 \).</p>
@@ -1246,7 +1251,6 @@ body {
   <!-- ── DEFINITIONS ── -->
   <section class="section-block">
     <div class="section-heading">
-      <div class="section-label">Definitions</div>
       <h2>Mathematical definitions</h2>
       <p>Both transformations produce zero-sum coordinates, but they have different domains before any preprocessing is applied.</p>
     </div>
@@ -1303,7 +1307,6 @@ body {
   <!-- ── COMPARISON ── -->
   <section class="section-block">
     <div class="section-heading">
-      <div class="section-label">Comparison</div>
       <h2>Transformation-level comparison</h2>
       <p>CLR remains a central log-ratio transformation for strictly positive compositions. The issue illustrated here is the additional zero-replacement step required when exact zeros are present.</p>
     </div>
@@ -1318,70 +1321,39 @@ body {
       <tbody>
         <tr>
           <td>Domain before preprocessing</td>
-          <td>Closed simplex \( \Delta^{p-1} \), including boundary points</td>
-          <td>Strictly positive simplex; zero-containing compositions require preprocessing</td>
+          <td>Closed simplex \( \Delta^{p-1} \)</td>
+          <td>Strictly positive simplex</td>
         </tr>
         <tr>
           <td>Exact zeros</td>
           <td>Allowed directly</td>
-          <td>Not allowed without replacement</td>
+          <td>Require replacement before CLR</td>
         </tr>
         <tr>
-          <td>Additional tuning value</td>
+          <td>Extra tuning value</td>
           <td>None for the transformation</td>
           <td>Requires \( \varepsilon \) or another zero-replacement rule</td>
         </tr>
         <tr>
-          <td>Output space</td>
+          <td>Output</td>
           <td>Zero-sum coordinates</td>
           <td>Zero-sum log-ratio coordinates</td>
         </tr>
         <tr>
-          <td>Behavior at and near the boundary</td>
+          <td>Boundary behavior</td>
           <td>Finite for exact zeros</td>
-          <td>Log terms diverge as components approach zero</td>
+          <td>Log terms diverge near zero</td>
         </tr>
         <tr>
-          <td>Main implication</td>
+          <td>Practical implication</td>
           <td>No zero preprocessing is required</td>
           <td>Results may depend on the replacement rule</td>
         </tr>
       </tbody>
     </table>
-  </section>
-
-  <!-- ── NOTES ── -->
-  <section class="section-block">
-    <div class="section-heading">
-      <div class="section-label">Notes</div>
-      <h2>What the visualization shows</h2>
-    </div>
-    <div class="notes-grid">
-      <article class="note-card ahc-card">
-        <h3>Why AHC is defined at boundary compositions</h3>
-        <p>
-          AHC begins with the square-root representation \(q_i=\sqrt{\pi_i}\). Because the square-root map is defined at zero, compositions with exact zero components remain valid inputs. The subsequent centering step maps the square-root point to a zero-sum coordinate representation without introducing an \(\varepsilon\)-dependent preprocessing step.
-        </p>
-      </article>
-      <article class="note-card clr-card">
-        <h3>Why CLR requires strictly positive components</h3>
-        <p>
-          CLR is based on logarithms of the compositional components. If \(\pi_i=0\), then \(\log(\pi_i)\) is undefined; as \(\pi_i\) approaches zero, the corresponding log term tends to \(-\infty\). Zero replacement makes CLR computable, but the transformed coordinates then depend on the replacement rule and on the value of \(\varepsilon\).
-        </p>
-      </article>
-      <article class="note-card">
-        <h3>What this visualization focuses on</h3>
-        <p>
-          This page focuses on the transformation step. It shows that AHC can be evaluated directly at zero-containing compositions, whereas CLR requires zero replacement before transformation. It also shows how the CLR coordinates of zero-containing points can change as \(\varepsilon\) changes.
-        </p>
-      </article>
-      <article class="note-card">
-        <h3>What this visualization does not claim</h3>
-        <p>
-          This visualization does not claim that AHC identifies structural zeros, distinguishes structural zeros from sampling zeros, or performs differential abundance testing by itself. Those tasks require additional modeling or downstream inference.
-        </p>
-      </article>
-    </div>
+    <p class="scope-note">
+      This page focuses only on the transformation step. It shows that AHC can be evaluated directly for zero-containing compositions, whereas CLR requires a zero-replacement step before transformation. It does not address structural-zero identification, sampling-zero imputation, or downstream differential abundance testing.
+    </p>
   </section>
 
 </main>
@@ -1882,13 +1854,9 @@ function renderTable() {
         value="${pt[2]}" data-pt="${i}" data-dim="2" oninput="onPointInput(this)"></td>
       <td><span class="sum-display ${sumOk?'sum-ok':'sum-warn'}">${sum.toFixed(3)}</span></td>
       <td><span class="zero-badge${(hasZero || isInvalid)?'':' hidden'}">${isInvalid ? 'Invalid' : 'Boundary'}</span></td>
-      <td>${state.points.length > 1
-        ? `<button class="remove-btn" onclick="removePoint(${i})" title="Remove composition" aria-label="Remove composition ${i+1}">×</button>`
-        : ''
-      }</td>`;
+      `;
     tbody.appendChild(row);
   });
-  document.getElementById('add-point-btn').disabled = state.points.length >= 5;
 }
 
 function onPointInput(input) {
@@ -1899,18 +1867,6 @@ function onPointInput(input) {
     state.points[i][d] = val;
     updateAll();
   }
-}
-
-function addPoint() {
-  if (state.points.length >= 5) return;
-  state.points.push([0.33, 0.33, 0.34]);
-  updateAll();
-}
-
-function removePoint(i) {
-  if (state.points.length <= 1) return;
-  state.points.splice(i, 1);
-  updateAll();
 }
 
 function applyPreset(name) {
