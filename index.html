@@ -1257,7 +1257,7 @@ body {
 // ────────────────────────────────────────────────────────────
 // STATE
 // ────────────────────────────────────────────────────────────
-const COLORS = ['#2563eb', '#b45309', '#7c3aed', '#0f766e', '#be123c'];
+const COLORS = ['#3f6f76', '#69b7ce', '#c65840', '#f4ce4b', '#62496f'];
 const DEFAULT_EPS = 1e-3;
 const EPS_MIN = 1e-6;
 const EPS_MAX = 1e-1;
@@ -1569,7 +1569,7 @@ function makeLayout(title, axisRange) {
   };
   return {
     autosize:true,
-    height:520,
+    height:640,
     paper_bgcolor:'#ffffff',
     margin:{l:0,r:0,t:42,b:0},
     title:{text:title, x:0.5, font:{size:14, color:'#1f2933'}},
@@ -1578,7 +1578,7 @@ function makeLayout(title, axisRange) {
     scene:{
       xaxis:{...ax}, yaxis:{...ax}, zaxis:{...ax},
       aspectmode:'cube',
-      camera:{eye:{x:1.65,y:1.65,z:1.45}, center:{x:0,y:0,z:0}}
+      camera:{eye:{x:1.28,y:1.28,z:1.12}, center:{x:0,y:0,z:0}}
     }
   };
 }
